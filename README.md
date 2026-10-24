@@ -94,8 +94,8 @@ brew install libusb pkgconf
 ### 2. Get the code and build it
 
 ```sh
-git clone https://github.com/<your-user>/<this-repo>.git
-cd <this-repo>
+git clone https://github.com/angelurueta/8bitdo-Arcade-Controller-on-Mac.git
+cd 8bitdo-Arcade-Controller-on-Mac
 make
 ```
 
