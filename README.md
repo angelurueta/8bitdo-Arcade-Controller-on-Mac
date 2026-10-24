@@ -1,5 +1,7 @@
 # 8BitDo Keys: a macOS driver for the 8BitDo Arcade Controller for Xbox
 
+**English** | [Español](README_es.md)
+
 A user-space macOS driver that makes the **[8BitDo Arcade Controller for Xbox](https://www.8bitdo.com/arcade-controller-xbox/)** usable on a Mac. It turns every button into a keyboard key that you choose, and it comes with a small native app that shows a drawing of the controller so you can remap keys visually.
 
 It works with apps that read the keyboard directly from the hardware, such as **OpenEmu**, because the keys are emitted through a real virtual HID keyboard (provided by Karabiner-Elements), not just simulated key presses.
