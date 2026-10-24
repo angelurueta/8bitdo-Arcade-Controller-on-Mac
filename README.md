@@ -6,6 +6,10 @@ A user-space macOS driver that makes the **[8BitDo Arcade Controller for Xbox](h
 
 It works with apps that read the keyboard directly from the hardware, such as **OpenEmu**, because the keys are emitted through a real virtual HID keyboard (provided by Karabiner-Elements), not just simulated key presses.
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="8BitDo Keys app showing the controller layout, with pressed buttons highlighted in green" width="720">
+</p>
+
 > **Why this exists:** Xbox-licensed controllers do not speak standard USB HID. They use Microsoft's **GIP** protocol, and macOS only supports Microsoft's own controllers. This controller enumerates on the Mac, but no driver claims it and no game sees it. This project talks GIP directly over USB with libusb.
 
 ---
@@ -171,8 +175,6 @@ Open **8BitDo Keys** from `/Applications`. The status bar at the top should show
 ## Usage
 
 ### The app
-
-<!-- Tip: add a screenshot here, e.g. docs/screenshot.png -->
 
 - **Controller drawing**: each circle is a button, labeled with the button name (small) and its assigned key (large). A button turns **green** while you press it.
 - **Remap a button**:

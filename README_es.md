@@ -6,6 +6,10 @@ Un driver en espacio de usuario que permite usar el **[8BitDo Arcade Controller 
 
 Funciona incluso con apps que leen el teclado directamente del hardware, como **OpenEmu**, porque las teclas salen por un teclado HID virtual real (el de Karabiner-Elements), no solo como pulsaciones simuladas.
 
+<p align="center">
+  <img src="docs/screenshot.png" alt="App 8BitDo Keys con el dibujo del control y los botones pulsados resaltados en verde" width="720">
+</p>
+
 > **Por qué existe:** los controles con licencia Xbox no usan HID USB estándar. Usan el protocolo **GIP** de Microsoft, y macOS solo es compatible con los controles de la propia Microsoft. El Mac detecta este control, pero ningún driver lo toma y ningún juego lo ve. Este proyecto habla GIP directamente por USB con libusb.
 
 ---
@@ -169,8 +173,6 @@ Abre **8BitDo Keys** desde `/Applications`. La barra de estado superior debería
 ## Uso
 
 ### La app
-
-<!-- Sugerencia: añade aquí una captura de pantalla, p. ej. docs/screenshot.png -->
 
 - **Dibujo del control**: cada círculo es un botón, con su nombre (pequeño) y la tecla asignada (grande). El botón se pone **verde** mientras lo pulsas.
 - **Reasignar un botón**:
