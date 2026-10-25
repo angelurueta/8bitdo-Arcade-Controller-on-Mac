@@ -186,6 +186,12 @@ Open **8BitDo Keys** from `/Applications`. The status bar at the top should show
 - **Stick derecho** ("right stick") row: keys for the four right-stick directions, used when the controller's directional mode is set to RS.
 - **Enviar teclas** ("send keys") switch: pauses key output while still showing button presses.
 - **Restaurar predeterminados**: restores the default key map.
+- **Configuración** ("configuration") row: saved key maps.
+  - Pick one from the dropdown to apply it. A **Street Fighter** configuration is included (directions on WASD, punches on U I O Y, kicks on J K L H).
+  - **Guardar como…** ("save as") saves the current keys under a name. Using an existing name replaces it.
+  - **Eliminar** ("delete") removes the selected configuration after asking for confirmation.
+
+  Configurations are stored as `.conf` files in `~/Library/Application Support/8BitDo Keys/Configuraciones/`, in the same format as the key map file.
 - Closing the window quits the app. Keep it open (or minimized) while you play.
 
 Only one program can use the controller at a time, so **don't run the app and `gip2key` together**.

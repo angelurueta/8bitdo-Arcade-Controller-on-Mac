@@ -184,6 +184,12 @@ Abre **8BitDo Keys** desde `/Applications`. La barra de estado superior debería
 - **Fila "Stick derecho"**: teclas para las cuatro direcciones del stick derecho, que se usan cuando el modo de dirección del control está en RS.
 - **Interruptor "Enviar teclas"**: pausa el envío de teclas, pero sigue mostrando las pulsaciones.
 - **Restaurar predeterminados**: vuelve al mapa de teclas original.
+- **Fila "Configuración"**: mapas de teclas guardados.
+  - Elige uno en la lista desplegable para aplicarlo. Se incluye la configuración **Street Fighter** (direcciones en WASD, puños en U I O Y y patadas en J K L H).
+  - **Guardar como…** guarda las teclas actuales con un nombre. Si el nombre ya existe, la reemplaza.
+  - **Eliminar** borra la configuración seleccionada después de pedir confirmación.
+
+  Las configuraciones se guardan como archivos `.conf` en `~/Library/Application Support/8BitDo Keys/Configuraciones/`, con el mismo formato que el archivo de mapa de teclas.
 - Cerrar la ventana cierra la app. Déjala abierta (o minimizada) mientras juegas.
 
 Solo un programa puede usar el control a la vez, así que **no ejecutes la app y `gip2key` al mismo tiempo**.

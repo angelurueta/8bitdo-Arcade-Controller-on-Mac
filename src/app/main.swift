@@ -15,6 +15,14 @@ final class ControllerModel: ObservableObject {
     @Published var selected: Int? = nil
     @Published var capturing = false { didSet { updateOutput(); updateMonitor() } }
     @Published var outputEnabled = true { didSet { updateOutput() } }
+    @Published var profiles = [String]()
+    @Published var currentProfile: String? = UserDefaults.standard.string(forKey: "currentProfile") {
+        didSet { UserDefaults.standard.set(currentProfile, forKey: "currentProfile") }
+    }
+    // Estado de los diálogos de guardar / eliminar configuración
+    @Published var namingProfile = false
+    @Published var newProfileName = ""
+    @Published var confirmingDelete = false
 
     private var monitor: Any?
     private let configURL: URL = {
@@ -23,10 +31,15 @@ final class ControllerModel: ObservableObject {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir.appendingPathComponent("keymap.conf")
     }()
+    private var profilesDir: URL {
+        configURL.deletingLastPathComponent().appendingPathComponent("Configuraciones", isDirectory: true)
+    }
 
     init() {
         if gip_load_keymap(configURL.path) != 0 { gip_save_keymap(configURL.path) }
         refreshKeys()
+        seedProfiles()
+        refreshProfiles()
         relay = gip_relay_available() != 0
         // Sin el relay se simulan teclas, y eso requiere el permiso de Accesibilidad
         trusted = gip_accessibility_trusted(relay ? 0 : 1) != 0
@@ -78,6 +91,60 @@ final class ControllerModel: ObservableObject {
         gip_reset_keymap()
         gip_save_keymap(configURL.path)
         refreshKeys()
+        currentProfile = nil
+    }
+
+    // MARK: Configuraciones guardadas (un .conf por configuración)
+
+    private func profileURL(_ name: String) -> URL {
+        profilesDir.appendingPathComponent(name).appendingPathExtension("conf")
+    }
+
+    // La primera vez se crean las configuraciones de ejemplo; si el usuario las borra no vuelven
+    private func seedProfiles() {
+        guard !FileManager.default.fileExists(atPath: profilesDir.path) else { return }
+        try? FileManager.default.createDirectory(at: profilesDir, withIntermediateDirectories: true)
+        try? streetFighterProfile.write(to: profileURL("Street Fighter"), atomically: true, encoding: .utf8)
+    }
+
+    private func refreshProfiles() {
+        let files = (try? FileManager.default.contentsOfDirectory(at: profilesDir, includingPropertiesForKeys: nil)) ?? []
+        profiles = files.filter { $0.pathExtension == "conf" }
+            .map { $0.deletingPathExtension().lastPathComponent }
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+        if let current = currentProfile, !profiles.contains(current) { currentProfile = nil }
+    }
+
+    // Nombre válido como archivo: sin "/" ni ":" y sin empezar por "."
+    static func cleanProfileName(_ name: String) -> String {
+        var clean = name.replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        while clean.hasPrefix(".") { clean.removeFirst() }
+        return clean
+    }
+
+    func applyProfile(_ name: String) {
+        let url = profileURL(name)
+        guard FileManager.default.fileExists(atPath: url.path) else { refreshProfiles(); return }
+        gip_load_keymap(url.path)
+        gip_save_keymap(configURL.path)
+        refreshKeys()
+        currentProfile = name
+    }
+
+    func saveProfile(_ name: String) {
+        let name = Self.cleanProfileName(name)
+        guard !name.isEmpty else { return }
+        try? FileManager.default.createDirectory(at: profilesDir, withIntermediateDirectories: true)
+        gip_save_keymap(profileURL(name).path)
+        currentProfile = name
+        refreshProfiles()
+    }
+
+    func deleteProfile(_ name: String) {
+        try? FileManager.default.removeItem(at: profileURL(name))
+        if currentProfile == name { currentProfile = nil }
+        refreshProfiles()
     }
 
     func openAccessibilitySettings() {
@@ -106,6 +173,35 @@ final class ControllerModel: ObservableObject {
         }
     }
 }
+
+let streetFighterProfile = """
+# Street Fighter: direcciones en WASD, golpes en U I O Y y patadas en J K L H
+UP     = w
+DOWN   = s
+LEFT   = a
+RIGHT  = d
+
+X      = u
+Y      = i
+RB     = o
+LB     = y
+A      = j
+B      = k
+RT     = l
+LT     = h
+
+MENU   = command
+VIEW   = tab
+HOME   = escape
+LS     = none
+RS     = none
+
+RUP    = i
+RDOWN  = k
+RLEFT  = j
+RRIGHT = l
+
+"""
 
 func buttonName(_ button: Int) -> String {
     String(cString: gip_button_name(Int32(button)))
@@ -284,6 +380,53 @@ struct EditorBar: View {
     }
 }
 
+struct ProfilesBar: View {
+    @EnvironmentObject var model: ControllerModel
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text("Configuración:").foregroundStyle(.secondary).font(.callout)
+            Picker("", selection: Binding(
+                get: { model.currentProfile ?? "" },
+                set: { if !$0.isEmpty { model.applyProfile($0) } }
+            )) {
+                Text("— personalizada —").tag("")
+                ForEach(model.profiles, id: \.self) { name in
+                    Text(name).tag(name)
+                }
+            }
+            .labelsHidden()
+            .frame(width: 200)
+            Button("Guardar como…") {
+                model.capturing = false
+                model.newProfileName = model.currentProfile ?? ""
+                model.namingProfile = true
+            }
+            Button("Eliminar") { model.confirmingDelete = true }
+                .disabled(model.currentProfile == nil)
+            Spacer()
+        }
+        .alert("Guardar configuración", isPresented: $model.namingProfile) {
+            TextField("Nombre", text: $model.newProfileName)
+            Button("Guardar") { model.saveProfile(model.newProfileName) }
+                .disabled(ControllerModel.cleanProfileName(model.newProfileName).isEmpty)
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text(model.profiles.contains(ControllerModel.cleanProfileName(model.newProfileName))
+                 ? "Ya existe una configuración con este nombre; se reemplazará con las teclas actuales."
+                 : "Se guardarán las teclas actuales con este nombre.")
+        }
+        .alert("¿Eliminar la configuración «\(model.currentProfile ?? "")»?", isPresented: $model.confirmingDelete) {
+            Button("Eliminar", role: .destructive) {
+                if let name = model.currentProfile { model.deleteProfile(name) }
+            }
+            Button("Cancelar", role: .cancel) {}
+        } message: {
+            Text("Esta acción no se puede deshacer. Las teclas actuales no cambian.")
+        }
+    }
+}
+
 struct StatusBar: View {
     @EnvironmentObject var model: ControllerModel
 
@@ -349,6 +492,7 @@ struct ContentView: View {
                 Spacer()
                 Button("Restaurar predeterminados") { model.resetDefaults() }
             }
+            ProfilesBar()
             Divider()
             EditorBar()
         }
